@@ -1,7 +1,10 @@
 package org.example;
 
 import org.java_websocket.WebSocket;
+import org.java_websocket.drafts.Draft;
+import org.java_websocket.exceptions.InvalidDataException;
 import org.java_websocket.handshake.ClientHandshake;
+import org.java_websocket.handshake.ServerHandshakeBuilder;
 import org.java_websocket.server.WebSocketServer;
 
 import java.net.InetSocketAddress;
@@ -13,12 +16,18 @@ public class Server extends WebSocketServer {
   }
 
   @Override
-  public void onOpen(WebSocket conn, ClientHandshake handshake) {
-    if (!handshake.getResourceDescriptor().equals("/")) {
-      System.out.println("Wrong path");
-      conn.close();
+  public ServerHandshakeBuilder onWebsocketHandshakeReceivedAsServer(WebSocket conn, Draft draft, ClientHandshake request) throws InvalidDataException {
+    if (!request.getResourceDescriptor().equals("/")) {
+      throw new InvalidDataException(0);
     }
 
+    ServerHandshakeBuilder builder = super.onWebsocketHandshakeReceivedAsServer( conn, draft, request );
+    //To your checks and throw an InvalidDataException to indicate that you reject this handshake.
+    return builder;
+  }
+
+  @Override
+  public void onOpen(WebSocket conn, ClientHandshake handshake) {
     conn.send("Welcome to the server!"); //This method sends a message to the new client
     broadcast( "new connection: " + handshake.getResourceDescriptor() ); //This method sends a message to all clients connected
     System.out.println("new connection to " + conn.getRemoteSocketAddress());
